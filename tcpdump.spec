@@ -2,7 +2,7 @@ Summary: A network traffic monitoring tool
 Name: tcpdump
 Epoch: 14
 Version: 4.0.0
-Release: 9.20090921gitdf3cb4.2%{?dist}
+Release: 11.20090921gitdf3cb4.2%{?dist}
 License: BSD with advertising
 URL: http://www.tcpdump.org
 Group: Applications/Internet
@@ -34,6 +34,7 @@ Patch0016:      tcpdump-4.0.0-savefile-ownership.patch
 Patch0017:      0016-make-pcap_setdirection-call-conditional-GH-252.patch
 Patch0018:      0017-use-Q-instead-of-P-to-set-capture-direction.patch
 Patch0019:      0018-Added-zero-row-to-the-end-of-the-long-opts-array.patch
+Patch0020:      0019-race-condition-sigalarm-segfault.patch
 
 
 %define tcpslice_dir tcpslice-1.2a3
@@ -107,6 +108,13 @@ exit 0
 %{_mandir}/man8/tcpdump.8*
 
 %changelog
+* Wed Nov 02 2016 Michal Ruprich - 14:4.0.0-11.20090921gitdf3cb4.2
+- Related: #1339662 - Race condition between SIGALARM handler function verbose_stats_dump() and main()->pcap_close()
+                    - Previous patch changed to upstream fix
+
+* Wed Oct 05 2016 Michal Ruprich - 14:4.0.0-10.20090921gitdf3cb4.2
+- Resolves: #1339662 -  Race condition between SIGALARM handler function verbose_stats_dump() and main()->pcap_close()
+
 * Tue Jan 12 2016 Luboš Uhliarik <luhliari@redhat.com> - 14:4.0.0-9.20090921gitdf3cb4.2
 - Resolves: #1297807 - Tcpdump segfaults with --help option on ppc64
 
