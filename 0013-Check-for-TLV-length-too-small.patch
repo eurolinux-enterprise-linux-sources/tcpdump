@@ -1,0 +1,75 @@
+From db3ccdf88a4830481fdd6c2d8bbf64bcb4f1d0e0 Mon Sep 17 00:00:00 2001
+From: Guy Harris <guy@alum.mit.edu>
+Date: Thu, 14 Aug 2014 17:14:32 -0700
+Subject: [PATCH] Check for TLV length too small.
+
+The TLV length includes the T and the L, so it must be at least 4.
+
+This means we don't need the "avoid infinite loop" check later; that
+check was wrong, as per GitHub issue #401 and #402; this fixes #402,
+which has a different patch for that bug.
+
+(cherry picked from commit 5511e8f79f0ac96671bab23223397881eba8b806)
+
+[msekleta: replaced ND_PRINT by printfs, added PLURAL_SUFFIX macro]
+
+Conflicts:
+        print-cdp.c
+---
+ netdissect.h |  3 +++
+ print-cdp.c  | 18 +++++++++++++++---
+ 2 files changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/netdissect.h b/netdissect.h
+index 3ff1b17..aee237e 100644
+--- a/netdissect.h
++++ b/netdissect.h
+@@ -259,6 +259,9 @@ extern char *copy_argv(netdissect_options *, char **);
+ extern void safeputchar(int);
+ extern void safeputs(const char *, int);
+ 
++#define PLURAL_SUFFIX(n) \
++	(((n) != 1) ? "s" : "")
++
+ #if 0
+ extern const char *isonsap_string(netdissect_options *, const u_char *);
+ extern const char *protoid_string(netdissect_options *, const u_char *);
+diff --git a/print-cdp.c b/print-cdp.c
+index bef7f5e..9ece7e3 100644
+--- a/print-cdp.c
++++ b/print-cdp.c
+@@ -111,6 +111,21 @@ cdp_print(const u_char *pptr, u_int length, u_int caplen)
+                     goto trunc;
+ 		type = EXTRACT_16BITS(tptr);
+ 		len  = EXTRACT_16BITS(tptr+2); /* object length includes the 4 bytes header length */
++
++		if (len < 4) {
++                    if (vflag)
++                        printf("\n\t%s (0x%02x), length: %u byte%s (too short)",
++                               tok2str(cdp_tlv_values,"unknown field type", type),
++                               type,
++                               len,
++                               PLURAL_SUFFIX(len)); /* plural */
++                    else
++                        printf(", %s TLV length %u too short",
++                               tok2str(cdp_tlv_values,"unknown field type", type),
++                               len);
++                    break;
++                }
++
+                 tptr += 4;
+                 len -= 4;
+ 
+@@ -222,9 +237,6 @@ cdp_print(const u_char *pptr, u_int length, u_int caplen)
+ 			break;
+                     }
+                 }
+-		/* avoid infinite loop */
+-		if (len == 0)
+-			break;
+ 		tptr = tptr+len;
+ 	}
+         if (vflag < 1)
+-- 
+1.8.3.1
+

@@ -1,0 +1,58 @@
+From 2fcd7396818566d819cb404ff9600e221f2146bd Mon Sep 17 00:00:00 2001
+From: Guy Harris <guy@alum.mit.edu>
+Date: Thu, 27 Sep 2012 21:12:00 -0700
+Subject: [PATCH 12/15] More strictly check for numbers as arguments to -i.
+
+Use strtol() and only treat the argument as a number if it's *all*
+number, so that interface names such as 192_1_2 aren't treated as
+"interface number 192".
+
+(cherry picked from commit fc058afcdac94b1440a61f9d0ae8ab7641f45848)
+---
+ tcpdump.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/tcpdump.c b/tcpdump.c
+index 5643f70..b227a88 100644
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -566,6 +566,7 @@ main(int argc, char **argv)
+ 	char ebuf[PCAP_ERRBUF_SIZE];
+ 	char *username = NULL;
+ 	char *chroot_dir = NULL;
++	char *end;
+ #ifdef HAVE_PCAP_FINDALLDEVS
+ 	pcap_if_t *devpointer;
+ 	int devnum;
+@@ -711,7 +712,8 @@ main(int argc, char **argv)
+ 			 * It can be useful on Windows, where more than
+ 			 * one interface can have the same name.
+ 			 */
+-			if ((devnum = atoi(optarg)) != 0) {
++			devnum = strtol(optarg, &end, 10);
++			if (optarg != end && *end == '\0') {
+ 				if (devnum < 0)
+ 					error("Invalid adapter index");
+ 
+@@ -830,9 +832,7 @@ main(int argc, char **argv)
+ 			Rflag = 0;
+ 			break;
+ 
+-		case 's': {
+-			char *end;
+-
++		case 's':
+ 			snaplen = strtol(optarg, &end, 0);
+ 			if (optarg == end || *end != '\0'
+ 			    || snaplen < 0 || snaplen > MAXIMUM_SNAPLEN)
+@@ -840,7 +840,6 @@ main(int argc, char **argv)
+ 			else if (snaplen == 0)
+ 				snaplen = MAXIMUM_SNAPLEN;
+ 			break;
+-		}
+ 
+ 		case 'S':
+ 			++Sflag;
+-- 
+1.8.3.1
+

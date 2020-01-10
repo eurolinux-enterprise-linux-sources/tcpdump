@@ -1,0 +1,64 @@
+From a8431b8054a4533eea2150390dd58e8713a73fcb Mon Sep 17 00:00:00 2001
+From: rpm-build <rpm-build>
+Date: Thu, 23 Oct 2014 12:06:22 +0200
+Subject: [PATCH 02/15] Drop root priviledges before opening first savefile if
+ running with -Z root
+
+---
+ tcpdump.1.in | 7 ++++++-
+ tcpdump.c    | 7 ++++++-
+ 2 files changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/tcpdump.1.in b/tcpdump.1.in
+index f0f7ce0..b09a8ed 100644
+--- a/tcpdump.1.in
++++ b/tcpdump.1.in
+@@ -206,6 +206,9 @@ have the name specified with the
+ flag, with a number after it, starting at 1 and continuing upward.
+ The units of \fIfile_size\fP are millions of bytes (1,000,000 bytes,
+ not 1,048,576 bytes).
++
++Note that when used with \fB\-Z\fR option (enabled by default), privileges
++are dropped before opening first savefile.
+ .TP
+ .B \-d
+ Dump the compiled packet-matching code in a human readable form to
+@@ -616,7 +619,9 @@ Drops privileges (if root) and changes user ID to
+ and the group ID to the primary group of
+ .IR user .
+ .IP
+-This behavior can also be enabled by default at compile time.
++This behavior is enabled by default (\fB\-Z tcpdump\fR), and can
++be disabled by \fB\-Z root\fR.
++
+ .IP "\fI expression\fP"
+ .RS
+ selects which packets will be dumped.
+diff --git a/tcpdump.c b/tcpdump.c
+index 18c7af4..4362972 100644
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -1109,6 +1109,11 @@ main(int argc, char **argv)
+ 		(void)setsignal(SIGHUP, oldhandler);
+ #endif /* WIN32 */
+ 
++	if (Cflag != 0 && (getuid() == 0 || geteuid() == 0)) {
++		if (username || chroot_dir)
++			droproot(username, chroot_dir);
++	}
++
+ 	if (pcap_setfilter(pd, &fcode) < 0)
+ 		error("%s", pcap_geterr(pd));
+ 	if (WFileName) {
+@@ -1157,7 +1162,7 @@ main(int argc, char **argv)
+ 	 * We cannot do this earlier, because we want to be able to open
+ 	 * the file (if done) for writing before giving up permissions.
+ 	 */
+-	if (getuid() == 0 || geteuid() == 0) {
++	if (Cflag == 0 && (getuid() == 0 || geteuid() == 0)) {
+ 		if (username || chroot_dir)
+ 			droproot(username, chroot_dir);
+ 	}
+-- 
+1.8.3.1
+

@@ -1,0 +1,416 @@
+From 626da6834c1ff838d43c82306d85f762c8998104 Mon Sep 17 00:00:00 2001
+From: Guy Harris <guy@alum.mit.edu>
+Date: Wed, 22 Oct 2014 16:42:27 +0200
+Subject: [PATCH 08/15] Add support for setting the time stamp type for a
+ capture.
+
+Based on a patch from Scott Mcmillan <scott.a.mcmillan@intel.com>.
+While we're at it, make some error messages a bit less geeky.
+
+(cherry picked from commit a20a6126fcdd61b06b16436d171a9a43c270e599)
+
+Conflicts:
+        CREDITS
+        tcpdump.c
+---
+ CREDITS      |   1 +
+ config.h.in  |   6 ++++
+ configure    | 104 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ configure.in |  11 ++++++-
+ interface.h  |   1 +
+ netdissect.h |   1 +
+ tcpdump.c    |  93 +++++++++++++++++++++++++++++++++++++++++++++-------
+ 7 files changed, 204 insertions(+), 13 deletions(-)
+
+diff --git a/CREDITS b/CREDITS
+index 3579d73..1b30de5 100644
+--- a/CREDITS
++++ b/CREDITS
+@@ -174,6 +174,7 @@ Additional people who have contributed patches:
+ 	William J. Hulley		<bill dot hulley at gmail dot com>
+ 	Yen Yen Lim
+ 	Yoshifumi Nishida
++	Scott Mcmillan			<scott.a.mcmillan at intel dot com>
+ 
+ The original LBL crew:
+ 	Steve McCanne
+diff --git a/config.h.in b/config.h.in
+index 20c3fcf..87b0fcf 100644
+--- a/config.h.in
++++ b/config.h.in
+@@ -165,6 +165,9 @@
+ /* Define to 1 if you have the `pcap_lib_version' function. */
+ #undef HAVE_PCAP_LIB_VERSION
+ 
++/* Define to 1 if you have the `pcap_set_tstamp_type' function. */
++#undef HAVE_PCAP_SET_TSTAMP_TYPE
++
+ /* Define to 1 if you have the <pcap/usb.h> header file. */
+ #undef HAVE_PCAP_USB_H
+ 
+@@ -267,6 +270,9 @@
+ /* Define to the one symbol short name of this package. */
+ #undef PACKAGE_TARNAME
+ 
++/* Define to the home page for this package. */
++#undef PACKAGE_URL
++
+ /* Define to the version of this package. */
+ #undef PACKAGE_VERSION
+ 
+diff --git a/configure b/configure
+index 7ea108d..239db8a 100755
+--- a/configure
++++ b/configure
+@@ -11166,7 +11166,9 @@ fi
+ 
+ #
+ # Do we have the new open API?  Check for pcap_create, and assume that,
+-# if we do, we also have pcap_activate() and the other new routines.
++# if we do, we also have pcap_activate() and the other new routines
++# introduced in libpcap 1.0.0.
++#
+ 
+ for ac_func in pcap_create
+ do
+@@ -11261,6 +11263,106 @@ _ACEOF
+ fi
+ done
+ 
++if test $ac_cv_func_pcap_create = "yes" ; then
++	#
++	# OK, do we have pcap_set_tstamp_type?  If so, assume we have
++	# pcap_list_tstamp_types and pcap_free_tstamp_types as well.
++	#
++
++for ac_func in pcap_set_tstamp_type
++do
++as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
++{ echo "$as_me:$LINENO: checking for $ac_func" >&5
++echo $ECHO_N "checking for $ac_func... $ECHO_C" >&6; }
++if { as_var=$as_ac_var; eval "test \"\${$as_var+set}\" = set"; }; then
++  echo $ECHO_N "(cached) $ECHO_C" >&6
++else
++  cat >conftest.$ac_ext <<_ACEOF
++/* confdefs.h.  */
++_ACEOF
++cat confdefs.h >>conftest.$ac_ext
++cat >>conftest.$ac_ext <<_ACEOF
++/* end confdefs.h.  */
++/* Define $ac_func to an innocuous variant, in case <limits.h> declares $ac_func.
++   For example, HP-UX 11i <limits.h> declares gettimeofday.  */
++#define $ac_func innocuous_$ac_func
++
++/* System header to define __stub macros and hopefully few prototypes,
++    which can conflict with char $ac_func (); below.
++    Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
++    <limits.h> exists even on freestanding compilers.  */
++
++#ifdef __STDC__
++# include <limits.h>
++#else
++# include <assert.h>
++#endif
++
++#undef $ac_func
++
++/* Override any GCC internal prototype to avoid an error.
++   Use char because int might match the return type of a GCC
++   builtin and then its argument prototype would still apply.  */
++#ifdef __cplusplus
++extern "C"
++#endif
++char $ac_func ();
++/* The GNU C library defines this for functions which it implements
++    to always fail with ENOSYS.  Some functions are actually named
++    something starting with __ and the normal name is an alias.  */
++#if defined __stub_$ac_func || defined __stub___$ac_func
++choke me
++#endif
++
++int
++main ()
++{
++return $ac_func ();
++  ;
++  return 0;
++}
++_ACEOF
++rm -f conftest.$ac_objext conftest$ac_exeext
++if { (ac_try="$ac_link"
++case "(($ac_try" in
++  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
++  *) ac_try_echo=$ac_try;;
++esac
++eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
++  (eval "$ac_link") 2>conftest.er1
++  ac_status=$?
++  grep -v '^ *+' conftest.er1 >conftest.err
++  rm -f conftest.er1
++  cat conftest.err >&5
++  echo "$as_me:$LINENO: \$? = $ac_status" >&5
++  (exit $ac_status); } && {
++	 test -z "$ac_c_werror_flag" ||
++	 test ! -s conftest.err
++       } && test -s conftest$ac_exeext &&
++       $as_test_x conftest$ac_exeext; then
++  eval "$as_ac_var=yes"
++else
++  echo "$as_me: failed program was:" >&5
++sed 's/^/| /' conftest.$ac_ext >&5
++
++	eval "$as_ac_var=no"
++fi
++
++rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
++      conftest$ac_exeext conftest.$ac_ext
++fi
++ac_res=`eval echo '${'$as_ac_var'}'`
++	       { echo "$as_me:$LINENO: result: $ac_res" >&5
++echo "${ECHO_T}$ac_res" >&6; }
++if test `eval echo '${'$as_ac_var'}'` = yes; then
++  cat >>confdefs.h <<_ACEOF
++#define `echo "HAVE_$ac_func" | $as_tr_cpp` 1
++_ACEOF
++
++fi
++done
++
++fi
+ 
+ 
+ 
+diff --git a/configure.in b/configure.in
+index 50ac7ad..4217077 100644
+--- a/configure.in
++++ b/configure.in
+@@ -721,8 +721,17 @@ fi
+ 
+ #
+ # Do we have the new open API?  Check for pcap_create, and assume that,
+-# if we do, we also have pcap_activate() and the other new routines.
++# if we do, we also have pcap_activate() and the other new routines
++# introduced in libpcap 1.0.0.
++#
+ AC_CHECK_FUNCS(pcap_create)
++if test $ac_cv_func_pcap_create = "yes" ; then
++	#
++	# OK, do we have pcap_set_tstamp_type?  If so, assume we have
++	# pcap_list_tstamp_types and pcap_free_tstamp_types as well.
++	#
++	AC_CHECK_FUNCS(pcap_set_tstamp_type)
++fi
+ 
+ AC_CHECK_FUNCS(pcap_findalldevs pcap_dump_flush pcap_lib_version)
+ if test $ac_cv_func_pcap_findalldevs = "yes" ; then
+diff --git a/interface.h b/interface.h
+index afeaee9..33dfe89 100644
+--- a/interface.h
++++ b/interface.h
+@@ -358,6 +358,7 @@ extern netdissect_options *gndo;
+ #define bflag gndo->ndo_bflag 
+ #define eflag gndo->ndo_eflag 
+ #define fflag gndo->ndo_fflag 
++#define jflag gndo->ndo_jflag
+ #define Kflag gndo->ndo_Kflag 
+ #define nflag gndo->ndo_nflag 
+ #define Nflag gndo->ndo_Nflag 
+diff --git a/netdissect.h b/netdissect.h
+index 9b64f3a..2f80d95 100644
+--- a/netdissect.h
++++ b/netdissect.h
+@@ -107,6 +107,7 @@ struct netdissect_options {
+   int ndo_Iflag;		/* rfmon (monitor) mode */
+   int ndo_Oflag;                /* run filter code optimizer */
+   int ndo_dlt;                  /* if != -1, ask libpcap for the DLT it names*/
++  int ndo_jflag;                /* packet time stamp source */
+   int ndo_pflag;                /* don't go promiscuous */
+ 
+   int ndo_Cflag;                /* rotate dump files after this many bytes */ 
+diff --git a/tcpdump.c b/tcpdump.c
+index 4362972..f42d3f6 100644
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -92,6 +92,11 @@ netdissect_options *gndo = &Gndo;
+ 
+ int dflag;			/* print filter code */
+ int Lflag;			/* list available data link types and exit */
++
++#ifdef HAVE_PCAP_SET_TSTAMP_TYPE
++static int Jflag;			/* list available time stamp types */
++#endif
++
+ char *zflag = NULL;		/* compress each savefile using a specified command (like gzip or bzip2) */
+ 
+ static int infodelay;
+@@ -315,6 +320,34 @@ struct dump_info {
+ 	pcap_dumper_t *p;
+ };
+ 
++#ifdef HAVE_PCAP_SET_TSTAMP_TYPE
++static void
++show_tstamp_types_and_exit(const char *device, pcap_t *pd)
++{
++	int n_tstamp_types;
++	int *tstamp_types = 0;
++	const char *tstamp_type_name;
++	int i;
++
++	n_tstamp_types = pcap_list_tstamp_types(pd, &tstamp_types);
++	if (n_tstamp_types < 0)
++		error("%s", pcap_geterr(pd));
++
++	for (i = 0; i < n_tstamp_types; i++) {
++		tstamp_type_name = pcap_tstamp_type_val_to_name(tstamp_types[i]);
++		if (tstamp_type_name != NULL) {
++			(void) fprintf(stderr, "  %s (%s)\n", tstamp_type_name,
++			    pcap_tstamp_type_val_to_description(tstamp_types[i]));
++		} else {
++			(void) fprintf(stderr, "  %d\n", tstamp_types[i]);
++		}
++	}
++	pcap_free_tstamp_types(tstamp_types);
++	exit(0);
++}
++#endif
++
++
+ static void
+ show_dlts_and_exit(pcap_t *pd)
+ {
+@@ -347,7 +380,7 @@ show_dlts_and_exit(pcap_t *pd)
+ 			    dlts[n_dlts]);
+ 		}
+ 	}
+-	free(dlts);
++	pcap_free_datalinks(dlts);
+ 	exit(0);
+ }
+ 
+@@ -369,6 +402,16 @@ show_dlts_and_exit(pcap_t *pd)
+ #define I_FLAG
+ #endif /* HAVE_PCAP_CREATE */
+ 
++#ifdef HAVE_PCAP_SET_TSTAMP_TYPE
++#define j_FLAG		"j:"
++#define j_FLAG_USAGE	" [ -j tstamptype ]"
++#define J_FLAG		"J"
++#else /* PCAP_ERROR_TSTAMP_TYPE_NOTSUP */
++#define j_FLAG
++#define j_FLAG_USAGE
++#define J_FLAG
++#endif /* PCAP_ERROR_TSTAMP_TYPE_NOTSUP */
++
+ #ifdef HAVE_PCAP_FINDALLDEVS
+ #ifndef HAVE_PCAP_IF_T
+ #undef HAVE_PCAP_FINDALLDEVS
+@@ -513,6 +556,7 @@ main(int argc, char **argv)
+ 	if(wsockinit() != 0) return 1;
+ #endif /* WIN32 */
+ 
++	jflag=-1;	/* not set */
+         gndo->ndo_Oflag=1;
+ 	gndo->ndo_Rflag=1;
+ 	gndo->ndo_dlt=-1;
+@@ -541,7 +585,7 @@ main(int argc, char **argv)
+ 
+ 	opterr = 0;
+ 	while (
+-	    (op = getopt(argc, argv, "aA" B_FLAG "c:C:d" D_FLAG "eE:fF:G:i:" I_FLAG "KlLm:M:nNOpqr:Rs:StT:u" U_FLAG "vw:W:xXy:Yz:Z:")) != -1)
++	    (op = getopt(argc, argv, "aA" B_FLAG "c:C:d" D_FLAG "eE:fF:G:i:" I_FLAG j_FLAG J_FLAG "KlLm:M:nNOpqr:Rs:StT:u" U_FLAG "vw:W:xXy:Yz:Z:")) != -1)
+ 		switch (op) {
+ 
+ 		case 'a':
+@@ -680,6 +724,18 @@ main(int argc, char **argv)
+ 			break;
+ #endif /* HAVE_PCAP_CREATE */
+ 
++#ifdef HAVE_PCAP_SET_TSTAMP_TYPE
++		case 'j':
++			jflag = pcap_tstamp_type_name_to_val(optarg);
++			if (jflag < 0)
++				error("invalid time stamp type %s", optarg);
++			break;
++
++		case 'J':
++			Jflag++;
++			break;
++#endif
++
+ 		case 'l':
+ #ifdef WIN32
+ 			/*
+@@ -972,18 +1028,24 @@ main(int argc, char **argv)
+ 		pd = pcap_create(device, ebuf);
+ 		if (pd == NULL)
+ 			error("%s", ebuf);
++
++#ifdef HAVE_PCAP_SET_TSTAMP_TYPE
++		if (Jflag)
++			show_tstamp_types_and_exit(device, pd);
++#endif
++
+ 		status = pcap_set_snaplen(pd, snaplen);
+ 		if (status != 0)
+-			error("%s: pcap_set_snaplen failed: %s",
++			error("%s: Can't set snapshot length: %s",
+ 			    device, pcap_statustostr(status));
+ 		status = pcap_set_promisc(pd, !pflag);
+ 		if (status != 0)
+-			error("%s: pcap_set_promisc failed: %s",
++			error("%s: Can't set promiscuous mode: %s",
+ 			    device, pcap_statustostr(status));
+ 		if (Iflag) {
+ 			status = pcap_set_rfmon(pd, 1);
+ 			if (status != 0)
+-				error("%s: pcap_set_rfmon failed: %s",
++				error("%s: Can't set monitor mode: %s",
+ 				    device, pcap_statustostr(status));
+ 		}
+ 		status = pcap_set_timeout(pd, 1000);
+@@ -993,9 +1055,17 @@ main(int argc, char **argv)
+ 		if (Bflag != 0) {
+ 			status = pcap_set_buffer_size(pd, Bflag);
+ 			if (status != 0)
+-				error("%s: pcap_set_buffer_size failed: %s",
++				error("%s: Can't set buffer size: %s",
+ 				    device, pcap_statustostr(status));
+ 		}
++#ifdef HAVE_PCAP_SET_TSTAMP_TYPE
++                if (jflag != -1) {
++			status = pcap_set_tstamp_type(pd, jflag);
++			if (status < 0)
++				error("%s: Can't set time stamp type: %s",
++			    	    device, pcap_statustostr(status));
++		}
++#endif
+ 		status = pcap_activate(pd);
+ 		if (status < 0) {
+ 			/*
+@@ -1707,17 +1777,18 @@ usage(void)
+ #endif /* WIN32 */
+ #endif /* HAVE_PCAP_LIB_VERSION */
+ 	(void)fprintf(stderr,
+-"Usage: %s [-aAd" D_FLAG "ef" I_FLAG "KlLnNOpqRStu" U_FLAG "vxX]" B_FLAG_USAGE " [ -c count ]\n", program_name);
++"Usage: %s [-aAd" D_FLAG "ef" I_FLAG J_FLAG "KlLnNOpqRStu" U_FLAG "vxX]" B_FLAG_USAGE " [ -c count ]\n", program_name);
++
+ 	(void)fprintf(stderr,
+ "\t\t[ -C file_size ] [ -E algo:secret ] [ -F file ] [ -G seconds ]\n");
+ 	(void)fprintf(stderr,
+-"\t\t[ -i interface ] [ -M secret ] [ -r file ]\n");
++"\t\t[ -i interface ]" j_FLAG_USAGE " [ -M secret ]\n");
+ 	(void)fprintf(stderr,
+-"\t\t[ -s snaplen ] [ -T type ] [ -w file ] [ -W filecount ]\n");
++"\t\t[ -r file ] [ -s snaplen ] [ -T type ] [ -w file ]\n");
+ 	(void)fprintf(stderr,
+-"\t\t[ -y datalinktype ] [ -z command ] [ -Z user ]\n");
++"\t\t[ -W filecount ] [ -y datalinktype ] [ -z command ]\n");
+ 	(void)fprintf(stderr,
+-"\t\t[ expression ]\n");
++"\t\t[ -Z user ] [ expression ]\n");
+ 	exit(1);
+ }
+ 
+-- 
+1.8.3.1
+

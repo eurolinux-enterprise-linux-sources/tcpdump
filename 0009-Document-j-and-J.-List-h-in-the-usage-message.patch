@@ -1,0 +1,70 @@
+From b5ff366c5e884928ab1b84acfade095868014b8a Mon Sep 17 00:00:00 2001
+From: Guy Harris <guy@alum.mit.edu>
+Date: Wed, 22 Oct 2014 17:23:12 +0200
+Subject: [PATCH 09/15] Document -j and -J. List -h in the usage message.
+
+(cherry picked from commit ce0f1d2e8ea0a2a97c740faf7823c93ae69bae26)
+
+Conflicts:
+        tcpdump.1.in
+        tcpdump.c
+---
+ tcpdump.1.in | 14 +++++++++++++-
+ tcpdump.c    |  2 +-
+ 2 files changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/tcpdump.1.in b/tcpdump.1.in
+index f11da37..3980dcc 100644
+--- a/tcpdump.1.in
++++ b/tcpdump.1.in
+@@ -29,7 +29,7 @@ tcpdump \- dump traffic on a network
+ .na
+ .B tcpdump
+ [
+-.B \-AdDefIKlLnNOpqRStuUvxX
++.B \-AdDefIJKlLnNOpqRStuUvxX
+ ] [
+ .B \-B
+ .I buffer_size
+@@ -56,6 +56,10 @@ tcpdump \- dump traffic on a network
+ .I interface
+ ]
+ [
++.B \-j
++.I tstamp_type
++]
++[
+ .B \-m
+ .I module
+ ]
+@@ -358,6 +362,14 @@ monitor mode will be shown; if
+ is specified, only those link-layer types available when in monitor mode
+ will be shown.
+ .TP
++.B \-j
++Set the time stamp type for the capture to \fItstamp_type\fP.
++.TP
++.B \-J
++List the supported time stamp types for the interface and exit.  If the
++time stamp type cannot be set for the interface, no time stamp types are
++listed.
++.TP
+ .B \-K
+ Don't attempt to verify IP, TCP, or UDP checksums.  This is useful for
+ interfaces that perform some or all of those checksum calculation in
+diff --git a/tcpdump.c b/tcpdump.c
+index f42d3f6..6c00f0e 100644
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -1777,7 +1777,7 @@ usage(void)
+ #endif /* WIN32 */
+ #endif /* HAVE_PCAP_LIB_VERSION */
+ 	(void)fprintf(stderr,
+-"Usage: %s [-aAd" D_FLAG "ef" I_FLAG J_FLAG "KlLnNOpqRStu" U_FLAG "vxX]" B_FLAG_USAGE " [ -c count ]\n", program_name);
++"Usage: %s [-aAd" D_FLAG "efh" I_FLAG J_FLAG "KlLnNOpqRStu" U_FLAG "vxX]" B_FLAG_USAGE " [ -c count ]\n", program_name);
+ 
+ 	(void)fprintf(stderr,
+ "\t\t[ -C file_size ] [ -E algo:secret ] [ -F file ] [ -G seconds ]\n");
+-- 
+1.8.3.1
+

@@ -1,6 +1,18 @@
---- tcpslice-1.2a3.orig/search.c	2000-09-10 10:52:40.000000000 +0200
-+++ tcpslice-1.2a3/search.c	2006-07-28 14:56:55.000000000 +0200
-@@ -53,7 +53,7 @@
+From 3668952103bdb50f6a6e08395fe641b504db0220 Mon Sep 17 00:00:00 2001
+From: rpm-build <rpm-build>
+Date: Mon, 20 Oct 2014 14:43:04 +0200
+Subject: [PATCH 05/15] tcpslice: update tcpslice patch to 1.2a3
+
+---
+ tcpslice-1.2a3/search.c   | 22 +++++++++++++++-------
+ tcpslice-1.2a3/tcpslice.h | 20 ++++++++++++++++++++
+ 2 files changed, 35 insertions(+), 7 deletions(-)
+
+diff --git a/tcpslice-1.2a3/search.c b/tcpslice-1.2a3/search.c
+index 1e2d051..23aa105 100644
+--- a/tcpslice-1.2a3/search.c
++++ b/tcpslice-1.2a3/search.c
+@@ -53,7 +53,7 @@ static const char rcsid[] =
  /* Size of a packet header in bytes; easier than typing the sizeof() all
   * the time ...
   */
@@ -9,7 +21,7 @@
  
  extern int snaplen;
  
-@@ -111,16 +111,24 @@
+@@ -111,16 +111,24 @@ reasonable_header( struct pcap_pkthdr *hdr, time_t first_time, time_t last_time
  static void
  extract_header( pcap_t *p, u_char *buf, struct pcap_pkthdr *hdr )
  	{
@@ -40,8 +52,10 @@
  	/*
  	 * From bpf/libpcap/savefile.c:
  	 *
---- tcpslice-1.2a3.orig/tcpslice.h	1995-11-02 00:40:53.000000000 +0100
-+++ tcpslice-1.2a3/tcpslice.h	2006-07-28 14:56:55.000000000 +0200
+diff --git a/tcpslice-1.2a3/tcpslice.h b/tcpslice-1.2a3/tcpslice.h
+index de4a01c..9b220de 100644
+--- a/tcpslice-1.2a3/tcpslice.h
++++ b/tcpslice-1.2a3/tcpslice.h
 @@ -20,6 +20,26 @@
   */
  
@@ -69,3 +83,6 @@
  time_t	gwtm2secs( struct tm *tm );
  
  int	sf_find_end( struct pcap *p, struct timeval *first_timestamp,
+-- 
+1.8.3.1
+

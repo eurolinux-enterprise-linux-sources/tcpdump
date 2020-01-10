@@ -2,26 +2,35 @@ Summary: A network traffic monitoring tool
 Name: tcpdump
 Epoch: 14
 Version: 4.0.0
-Release: 3.20090921gitdf3cb4.2%{?dist}
+Release: 5.20090921gitdf3cb4.2%{?dist}
 License: BSD with advertising
 URL: http://www.tcpdump.org
 Group: Applications/Internet
 Requires(pre): shadow-utils 
-BuildRequires: openssl-devel libpcap-devel
-BuildRequires: automake
+BuildRequires: openssl-devel libpcap-devel automake git
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 #Source0: http://www.tcpdump.org/release/tcpdump-%{version}.tar.gz
 # git snapshot from git://bpf.tcpdump.org/tcpdump
 Source0: tcpdump-4.0.0-20090921gitdf3cb4.tar.bz2
 Source1: ftp://ftp.ee.lbl.gov/tcpslice-1.2a3.tar.gz
-Patch1: tcpdump-4.0.0-droproot.patch
-Patch2: tcpdump-4.0.0-portnumbers.patch
-Patch3: tcpdump-4.0.0-icmp6msec.patch
-Patch5: tcpslice-1.2a3-time.patch
-Patch6: tcpslice-CVS.20010207-bpf.patch
-Patch7: tcpdump-3.9.8-gethostby.patch
-Patch8: tcpslice-1.2a3-dateformat.patch
+
+# Patches
+Patch0001:      0001-Use-getnameinfo-instead-of-gethostbyaddr.patch
+Patch0002:      0002-Drop-root-priviledges-before-opening-first-savefile-.patch
+Patch0003:      0003-icmp6-print-Reachable-Time-and-Retransmit-Time-from-.patch
+Patch0004:      0004-Introduce-nn-option.patch
+Patch0005:      0005-tcpslice-update-tcpslice-patch-to-1.2a3.patch
+Patch0006:      0006-tcpslice-remove-unneeded-include.patch
+Patch0007:      0007-tcpslice-don-t-test-the-pointer-but-pointee-for-NULL.patch
+Patch0008:      0008-Add-support-for-setting-the-time-stamp-type-for-a-ca.patch
+Patch0009:      0009-Document-j-and-J.-List-h-in-the-usage-message.patch
+Patch0010:      0010-Introduce-time-stamp-precision.patch
+Patch0011:      0011-Give-more-details-for-time-stamp-precision.patch
+Patch0012:      0012-More-strictly-check-for-numbers-as-arguments-to-i.patch
+Patch0013:      0013-Check-for-TLV-length-too-small.patch
+Patch0014:      0014-Print-checksum-in-hex-and-print-the-actual-checksum-.patch
+Patch0015:      0015-add-support-for-pcap_setdirection-GH-252.patch
 
 %define tcpslice_dir tcpslice-1.2a3
 
@@ -35,17 +44,12 @@ Install tcpdump if you need a program to monitor network traffic.
 
 %prep
 %setup -q -a 1 -n tcpdump
-
-%patch1 -p1 -b .droproot
-%patch2 -p1 -b .portnumbers
-%patch3 -p1 -b .icmp6msec
-%patch7 -p1 -b .gethostby
-
-pushd %{tcpslice_dir}
-%patch5 -p1 -b .time
-%patch6 -p1 -b .bpf
-%patch8 -p1 -b .dateformat
-popd
+git init
+git config user.email "msekleta@redhat.com"
+git config user.name "Michal Sekletar"
+git add .
+git commit -a -q -m "%{version} baseline."
+git am %{patches}
 
 find . -name '*.c' -o -name '*.h' | xargs chmod 644
 
@@ -59,6 +63,7 @@ automake -a -f 2> /dev/null || :
 make %{?_smp_mflags}
 popd
 
+autoreconf -fi
 %configure --with-crypto --with-user=tcpdump --without-smi
 make %{?_smp_mflags}
 
@@ -98,6 +103,16 @@ exit 0
 %{_mandir}/man8/tcpdump.8*
 
 %changelog
+* Tue Feb 03 2015 Michal Sekletar <msekleta@redhat.com> - 14:4.0.0-5.20090921gitdf3cb4.2
+- regenerate patch for pcap_setdirection support. Added detection of the needed
+  libpcap functionality to configure script
+
+* Wed Jan 28 2015 Michal Sekletar <msekleta@redhat.com> - 14:4.0.0-4.20090921gitdf3cb4.2
+- add support for pcap_setdirection, -P commandline flag (#1099701)
+- add support for nano second timestamps, -J flag and --timestamp-preciosion (#1045601)
+- fix cdp dissector, allow zero-length data frames (#1130111)
+- allow specifying NIC names which start with number (#972396)
+
 * Wed Feb 01 2012 Jan Synáček <jsynacek@redhat.com> - 14:4.0.0-3.20090921gitdf3cb4.2
 - Add dateformat patch
 - Resolves: #684005
