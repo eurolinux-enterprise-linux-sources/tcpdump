@@ -2,7 +2,7 @@ Summary: A network traffic monitoring tool
 Name: tcpdump
 Epoch: 14
 Version: 4.0.0
-Release: 5.20090921gitdf3cb4.2%{?dist}
+Release: 9.20090921gitdf3cb4.2%{?dist}
 License: BSD with advertising
 URL: http://www.tcpdump.org
 Group: Applications/Internet
@@ -10,7 +10,6 @@ Requires(pre): shadow-utils
 BuildRequires: openssl-devel libpcap-devel automake git
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-#Source0: http://www.tcpdump.org/release/tcpdump-%{version}.tar.gz
 # git snapshot from git://bpf.tcpdump.org/tcpdump
 Source0: tcpdump-4.0.0-20090921gitdf3cb4.tar.bz2
 Source1: ftp://ftp.ee.lbl.gov/tcpslice-1.2a3.tar.gz
@@ -31,6 +30,11 @@ Patch0012:      0012-More-strictly-check-for-numbers-as-arguments-to-i.patch
 Patch0013:      0013-Check-for-TLV-length-too-small.patch
 Patch0014:      0014-Print-checksum-in-hex-and-print-the-actual-checksum-.patch
 Patch0015:      0015-add-support-for-pcap_setdirection-GH-252.patch
+Patch0016:      tcpdump-4.0.0-savefile-ownership.patch
+Patch0017:      0016-make-pcap_setdirection-call-conditional-GH-252.patch
+Patch0018:      0017-use-Q-instead-of-P-to-set-capture-direction.patch
+Patch0019:      0018-Added-zero-row-to-the-end-of-the-long-opts-array.patch
+
 
 %define tcpslice_dir tcpslice-1.2a3
 
@@ -103,6 +107,20 @@ exit 0
 %{_mandir}/man8/tcpdump.8*
 
 %changelog
+* Tue Jan 12 2016 Luboš Uhliarik <luhliari@redhat.com> - 14:4.0.0-9.20090921gitdf3cb4.2
+- Resolves: #1297807 - Tcpdump segfaults with --help option on ppc64
+
+* Tue Jan 05 2016 Luboš Uhliarik <luhliari@redhat.com> - 14:4.0.0-8.20090921gitdf3cb4.2
+- Resolves: #1292055 - both -P flag and -Q flag are supported
+
+* Fri Dec 11 2015 Luboš Uhliarik <luhliari@redhat.com> - 14:4.0.0-7.20090921gitdf3cb4.2
+- Resolves: #1250807 - tcpdump fails to work with interfaces not supporting 
+  pcap_setdirection()
+
+* Thu Sep 10 2015 Luboš Uhliarik <luhliari@redhat.com> - 14:4.0.0-6.20090921gitdf3cb4.2
+- Resolves: #1261832 - Couldn't change ownership of savefile
+- Fixed bogus dates in SPEC
+
 * Tue Feb 03 2015 Michal Sekletar <msekleta@redhat.com> - 14:4.0.0-5.20090921gitdf3cb4.2
 - regenerate patch for pcap_setdirection support. Added detection of the needed
   libpcap functionality to configure script
@@ -253,7 +271,7 @@ exit 0
 - fix for #164227 (buffer overflow)
 - fix for #164230 (missing debug info)
 
-* Tue Jul 14 2005 Martin Stransky <stransky@redhat.com> - 14:3.9.1-1
+* Thu Jul 14 2005 Martin Stransky <stransky@redhat.com> - 14:3.9.1-1
 - New upstream version
 
 * Tue Jun 21 2005 Martin Stransky <stransky@redhat.com> - 14:3.8.2-14
@@ -280,7 +298,7 @@ exit 0
 * Thu Feb 10 2005 Ivana Varekova <varekova@redhat.com> - 14:3.8.2-8
 - rebuilt
 
-* Wed Oct 12 2004 Harald Hoyer <harald@redhat.com> - 14:3.8.2-7
+* Tue Oct 12 2004 Harald Hoyer <harald@redhat.com> - 14:3.8.2-7
 - fixed nfs protocol parsing for 64 bit architectures (bug 132781)
 
 * Wed Sep 15 2004 Harald Hoyer <harald@redhat.com> - 14:3.8.2-6
@@ -312,7 +330,7 @@ exit 0
 * Fri Feb 13 2004 Elliot Lee <sopwith@redhat.com>
 - rebuilt
 
-* Tue Jan 23 2004 Harald Hoyer <harald@redhat.de> 14:3.8.1-4/17
+* Fri Jan 23 2004 Harald Hoyer <harald@redhat.de> 14:3.8.1-4/17
 - fixed arpwatch version
 - fixed libpcap library version
 - fixed tcpdump droproot

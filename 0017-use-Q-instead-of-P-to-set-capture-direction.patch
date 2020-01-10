@@ -1,0 +1,127 @@
+From 8354e31273344ec927e4d6d2596e8fd79edb15f0 Mon Sep 17 00:00:00 2001
+From: Denis Ovsienko <infrastation@yandex.ru>
+Date: Mon, 16 Dec 2013 11:38:55 +0400
+Subject: [PATCH] use -Q instead of -P to set capture direction
+
+Guy Harris points that -P is already taken by MacOS derived work and
+that the only remaining single-letter option is -Q (see GH #252). Fix
+some formatting while at it.
+---
+diff --git a/tcpdump.1.in b/tcpdump.1.in
+index 24976f5..2c81818 100644
+--- a/tcpdump.1.in
++++ b/tcpdump.1.in
+@@ -70,7 +70,7 @@ tcpdump \- dump traffic on a network
+ .br
+ .ti +8
+ [
+-.B \-P
++.B \-Q|\-P
+ .I in|out|inout
+ ]
+ .ti +8
+@@ -453,7 +453,7 @@ Note that the interface might be in promiscuous
+ mode for some other reason; hence, `-p' cannot be used as an abbreviation for
+ `ether host {local-hw-addr} or ether broadcast'.
+ .TP
+-.B \-P
++.B \-Q|\-P
+ Choose send/receive direction \fIdirection\fR for which packets should be
+ captured. Possible values are `in', `out' and `inout'. Not available
+ on all platforms.
+diff --git a/tcpdump.c b/tcpdump.c
+index 6ee9ffb..ff032e0 100644
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -99,7 +99,7 @@ static int Jflag;			/* list available time stamp types */
+ #endif
+ 
+ #ifdef HAVE_PCAP_SETDIRECTION
+-int Pflag = -1;	/* Restrict captured packet by sent/receive direction */
++int PQflag = -1;				/* restrict captured packet by send/receive direction */
+ #endif
+ 
+ char *zflag = NULL;		/* compress each savefile using a specified command (like gzip or bzip2) */
+@@ -436,9 +436,9 @@ show_dlts_and_exit(pcap_t *pd)
+ #endif
+ 
+ #ifdef HAVE_PCAP_SETDIRECTION
+-#define P_FLAG "P:"
++#define PQ_FLAG "P:Q:"
+ #else
+-#define P_FLAG
++#define PQ_FLAG
+ #endif
+ 
+ #define OPTION_TSTAMP_PRECISION 130
+@@ -615,7 +615,7 @@ main(int argc, char **argv)
+ 
+ 	opterr = 0;
+ 	while (
+-               (op = getopt_long(argc, argv, "aA" B_FLAG "c:C:d" D_FLAG "eE:fF:G:i:" I_FLAG j_FLAG J_FLAG "KlLm:M:nNOp" P_FLAG "qr:Rs:StT:u" U_FLAG "vw:W:xXy:Yz:Z:", longopts, NULL)) != -1)
++               (op = getopt_long(argc, argv, "aA" B_FLAG "c:C:d" D_FLAG "eE:fF:G:i:" I_FLAG j_FLAG J_FLAG "KlLm:M:nNOpq" PQ_FLAG "r:Rs:StT:u" U_FLAG "vw:W:xXy:Yz:Z:", longopts, NULL)) != -1)
+ 		switch (op) {
+ 
+ 		case 'a':
+@@ -828,22 +828,25 @@ main(int argc, char **argv)
+ 		case 'p':
+ 			++pflag;
+ 			break;
++
++		case 'q':
++			++qflag;
++			++suppress_default_print;
++			break;
++
+ #ifdef HAVE_PCAP_SETDIRECTION
+ 		case 'P':
++		case 'Q':
+ 			if (strcasecmp(optarg, "in") == 0)
+-				Pflag = PCAP_D_IN;
++				PQflag = PCAP_D_IN;
+ 			else if (strcasecmp(optarg, "out") == 0)
+-				Pflag = PCAP_D_OUT;
++				PQflag = PCAP_D_OUT;
+ 			else if (strcasecmp(optarg, "inout") == 0)
+-				Pflag = PCAP_D_INOUT;
++				PQflag = PCAP_D_INOUT;
+ 			else
+ 				error("unknown capture direction `%s'", optarg);
+ 			break;
+ #endif /* HAVE_PCAP_SETDIRECTION */
+-		case 'q':
+-			++qflag;
+-			++suppress_default_print;
+-			break;
+ 
+ 		case 'r':
+ 			RFileName = optarg;
+@@ -1154,13 +1157,13 @@ main(int argc, char **argv)
+ 				    pcap_statustostr(status));
+ 		}
+ #ifdef HAVE_PCAP_SETDIRECTION
+-		if (Pflag != -1) {
+-			status = pcap_setdirection(pd, Pflag);
++		if (PQflag != -1) {
++			status = pcap_setdirection(pd, PQflag);
+ 			if (status != 0)
+ 				error("%s: pcap_setdirection() failed: %s",
+ 				      device,  pcap_geterr(pd));
+ 		}
+-#endif
++#endif /* HAVE_PCAP_SETDIRECTION */
+ #else
+ 		*ebuf = '\0';
+ 		pd = pcap_open_live(device, snaplen, !pflag, 1000, ebuf);
+@@ -1847,7 +1850,7 @@ usage(void)
+ 	(void)fprintf(stderr,
+ "\t\t[ -i interface ]" j_FLAG_USAGE " [ -M secret ]\n");
+ #ifdef HAVE_PCAP_SETDIRECTION
+-	(void)fprintf(stderr,"\t\t[ -P in|out|inout ]\n");
++	(void)fprintf(stderr,"\t\t[ -Q|-P in|out|inout ]\n");
+ #endif
+ 	(void)fprintf(stderr,
+ "\t\t[ -r file ] [ -s snaplen ] [ -T type ] [ -w file ]\n");
+
+-- 
+2.5.0

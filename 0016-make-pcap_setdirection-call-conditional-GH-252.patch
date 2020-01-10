@@ -1,0 +1,46 @@
+From 17d961421c6e263d3a2f114b89994f3e32c90a2e Mon Sep 17 00:00:00 2001
+From: Denis Ovsienko <infrastation@yandex.ru>
+Date: Tue, 15 Oct 2013 15:01:28 +0400
+Subject: [PATCH] make pcap_setdirection() call conditional, GH #252
+
+pcap_setdirection() succeeds only for particular combination of
+platform, interface type and direction. Calling it on each invocation
+(with PCAP_D_INOUT by default) was wrong: some interfaces are two-way,
+others are one-way, and pcap_setdirection() has its own idea what it
+supports and what doesn't. In particular, it was impossible to do any
+capture on nflog interface in Linux since commit df7d24f. Now the
+function is only called on -P flag.
+---
+
+diff --git a/tcpdump.c b/tcpdump.c
+index b9784e3..6ee9ffb 100644
+--- a/tcpdump.c
++++ b/tcpdump.c
+@@ -99,7 +99,7 @@ static int Jflag;			/* list available time stamp types */
+ #endif
+ 
+ #ifdef HAVE_PCAP_SETDIRECTION
+-int Pflag = PCAP_D_INOUT;	/* Restrict captured packet by sent/receive direction */
++int Pflag = -1;	/* Restrict captured packet by sent/receive direction */
+ #endif
+ 
+ char *zflag = NULL;		/* compress each savefile using a specified command (like gzip or bzip2) */
+@@ -1154,10 +1154,12 @@ main(int argc, char **argv)
+ 				    pcap_statustostr(status));
+ 		}
+ #ifdef HAVE_PCAP_SETDIRECTION
+-		status = pcap_setdirection(pd, Pflag);
+-		if (status != 0)
+-			error("%s: pcap_set_direction failed: %s",
+-			    device,  pcap_geterr(pd));
++		if (Pflag != -1) {
++			status = pcap_setdirection(pd, Pflag);
++			if (status != 0)
++				error("%s: pcap_setdirection() failed: %s",
++				      device,  pcap_geterr(pd));
++		}
+ #endif
+ #else
+ 		*ebuf = '\0';
+-- 
+2.5.0
