@@ -2,7 +2,7 @@ Summary: A network traffic monitoring tool
 Name: tcpdump
 Epoch: 14
 Version: 4.0.0
-Release: 3.20090921gitdf3cb4.1%{?dist}
+Release: 3.20090921gitdf3cb4.2%{?dist}
 License: BSD with advertising
 URL: http://www.tcpdump.org
 Group: Applications/Internet
@@ -21,6 +21,7 @@ Patch3: tcpdump-4.0.0-icmp6msec.patch
 Patch5: tcpslice-1.2a3-time.patch
 Patch6: tcpslice-CVS.20010207-bpf.patch
 Patch7: tcpdump-3.9.8-gethostby.patch
+Patch8: tcpslice-1.2a3-dateformat.patch
 
 %define tcpslice_dir tcpslice-1.2a3
 
@@ -43,6 +44,7 @@ Install tcpdump if you need a program to monitor network traffic.
 pushd %{tcpslice_dir}
 %patch5 -p1 -b .time
 %patch6 -p1 -b .bpf
+%patch8 -p1 -b .dateformat
 popd
 
 find . -name '*.c' -o -name '*.h' | xargs chmod 644
@@ -96,6 +98,10 @@ exit 0
 %{_mandir}/man8/tcpdump.8*
 
 %changelog
+* Wed Feb 01 2012 Jan Synáček <jsynacek@redhat.com> - 14:4.0.0-3.20090921gitdf3cb4.2
+- Add dateformat patch
+- Resolves: #684005
+
 * Fri Dec 11 2009 Dennis Gregorovic <dgregor@redhat.com> - 14:4.0.0-3.20090921gitdf3cb4.1
 - Rebuilt for RHEL 6
 
