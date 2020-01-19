@@ -2,11 +2,11 @@ Summary: A network traffic monitoring tool
 Name: tcpdump
 Epoch: 14
 Version: 4.9.2
-Release: 3%{?dist}
+Release: 4%{?dist}
 License: BSD with advertising
 URL: http://www.tcpdump.org
 Group: Applications/Internet
-Requires(pre): shadow-utils
+Requires(pre): shadow-utils /usr/bin/getent
 Requires: libpcap >= 14:1.5.3-10
 BuildRequires: automake sharutils openssl-devel libcap-ng-devel libpcap-devel git 
 
@@ -75,9 +75,12 @@ sed -i 's/\(\.TH[a-zA-Z ]*\)[1-9]\(.*\)/\18\2/' \
 	${RPM_BUILD_ROOT}%{_mandir}/man8/*
 
 %pre
-/usr/sbin/groupadd -g 72 tcpdump 2> /dev/null
-/usr/sbin/useradd -u 72 -g 72 -s /sbin/nologin -M -r \
-	-d / tcpdump 2> /dev/null
+if [ "$1" -eq 1 ]; then
+  getent group  tcpdump > /dev/null ||  /usr/sbin/groupadd -g 72 tcpdump > /dev/null
+  getent passwd tcpdump > /dev/null ||  /usr/sbin/useradd -u 72 -g 72 -s /sbin/nologin -M -r \
+        -d / tcpdump > /dev/null
+fi
+
 exit 0
 
 %files
@@ -89,6 +92,9 @@ exit 0
 %{_mandir}/man8/tcpdump.8*
 
 %changelog
+* Mon Jun 03 2019 Michal Ruprich <mruprich@redhat.com> - 14:4.9.2-4
+- Resolves: #1664648 - tcpdump post creates user and groups unconditionally, raising alerts in corporate environment
+
 * Wed Nov 15 2017 Michal Ruprich - 14:4.9.2-3
 - Related: rhbz#1464390; build against latest libpcap
 
