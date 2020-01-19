@@ -1,29 +1,30 @@
 Summary: A network traffic monitoring tool
 Name: tcpdump
 Epoch: 14
-Version: 4.5.1
-Release: 3%{?dist}
+Version: 4.9.0
+Release: 5%{?dist}
 License: BSD with advertising
 URL: http://www.tcpdump.org
 Group: Applications/Internet
 Requires(pre): shadow-utils
-BuildRequires: openssl-devel libpcap-devel
-BuildRequires: automake sharutils
+BuildRequires: automake sharutils openssl-devel libcap-ng-devel libpcap-devel git
 
 Source0: http://www.tcpdump.org/release/%{name}-%{version}.tar.gz
 Source1: ftp://ftp.ee.lbl.gov/tcpslice-1.2a3.tar.gz
 
-Patch1: tcpdump-4.0.0-portnumbers.patch
-Patch2: tcpdump-4.0.0-icmp6msec.patch
-Patch3: tcpdump-4.5.0-gethostby.patch
-Patch4: tcpdump-4.4.0-eperm.patch
-Patch5: tcpslice-1.2a3-time.patch
-Patch6: tcpslice-CVS.20010207-bpf.patch
-Patch7: tcpslice-1.2a3-dateformat.patch
-Patch8: 0001-Introduce-time-stamp-precision.patch
-Patch9: 0002-Give-more-details-for-time-stamp-precision.patch
-Patch10: 0003-Check-for-TLV-length-too-small.patch
-Patch11: 0004-Print-checksum-in-hex-and-print-the-actual-checksum-.patch
+Patch0001:      0001-icmp6-print-Reachable-Time-and-Retransmit-Time-from-.patch
+Patch0002:      0002-Use-getnameinfo-instead-of-gethostbyaddr.patch
+# Patch 0003 removed
+Patch0004:      0004-tcpslice-update-tcpslice-patch-to-1.2a3.patch
+Patch0005:      0005-tcpslice-remove-unneeded-include.patch
+Patch0006:      0006-tcpslice-don-t-test-the-pointer-but-pointee-for-NULL.patch
+Patch0007:      0007-Introduce-nn-option.patch
+Patch0008:      0008-Don-t-print-out-we-dropped-root-we-are-always-droppi.patch
+Patch0009:      0009-Change-P-to-Q-and-print-warning.patch
+Patch0010:	0010-Change-n-flag-to-nn-in-TESTonce.patch
+Patch0011: 	0011-Expect-miliseconds-instead-of-seconds-in-icmp-captur.patch
+Patch0012: 	0012-Disable-tests-that-require-newer-version-of-libpcap.patch
+Patch0013:      0013-Make-default-capture-buffer-size-bigger.patch
 
 %define tcpslice_dir tcpslice-1.2a3
 
@@ -36,27 +37,10 @@ the packet headers, or just the ones that match particular criteria.
 Install tcpdump if you need a program to monitor network traffic.
 
 %prep
-%setup -q -a 1
-
-%patch1 -p1 -b .portnumbers
-%patch2 -p1 -b .icmp6msec
-%patch3 -p1 -b .gethostby
-%patch4 -p1 -b .eperm
-%patch8 -p1 -b .tstamp
-%patch9 -p1 -b .tstamp-details
-%patch10 -p1 -b .cdp
-%patch11 -p1 -b .cdp-checksum
-
-pushd %{tcpslice_dir}
-%patch5 -p1 -b .time
-%patch6 -p1 -b .bpf
-%patch7 -p1 -b .dateformat
-popd
-
-find . -name '*.c' -o -name '*.h' | xargs chmod 644
+%autosetup -a 1 -S git
 
 %build
-export CFLAGS="$RPM_OPT_FLAGS $(getconf LFS_CFLAGS) -fno-strict-aliasing"
+export CFLAGS="$RPM_OPT_FLAGS $(getconf LFS_CFLAGS) -fno-strict-aliasing -DHAVE_GETNAMEINFO"
 
 pushd %{tcpslice_dir}
 # update config.{guess,sub}
@@ -69,7 +53,7 @@ popd
 make %{?_smp_mflags}
 
 %check
-#make check
+make check
 
 %install
 mkdir -p ${RPM_BUILD_ROOT}%{_libdir}
@@ -103,6 +87,33 @@ exit 0
 %{_mandir}/man8/tcpdump.8*
 
 %changelog
+* Tue May 09 2017 Martin Sehnoutka <msehnout@redhat.com> - 14:4.9.0-5
+- Resolves: #1441597; use bigger capture buffer than in upstream
+
+* Thu Apr 20 2017 Martin Sehnoutka <msehnout@redhat.com> - 14:4.9.0-4
+- Drop downstream patch (drop root privileges)
+- Add libcap-ng as a new build dependency
+- Related: #1262283
+
+* Tue Apr 11 2017 root - 14:4.9.0-3
+- Fix tests according to our patches and libpcap version
+
+* Fri Mar 17 2017 Martin Sehnoutka <msehnout@redhat.com> - 14:4.9.0-2
+- Use getnameinfo instead of gethostbyaddr
+
+* Mon Feb 20 2017 Martin Sehnoutka <msehnout@redhat.com> - 14:4.9.0-1
+- New upstream version 4.9.0. Resolves: #1422473
+- Add legacy -P switch with warning. Related to #1422473 and #1292056
+
+* Wed Jan 04 2017 Martin Sehnoutka <msehnout@redhat.com> - 14:4.5.1-6
+- Drop root before creating any dump file. Resolves: #1262283
+
+* Wed Jan 04 2017 Martin Sehnoutka <msehnout@redhat.com> - 14:4.5.1-5
+- Use -Q instead of -P to set capture direction. Resolves: #1292056
+
+* Fri Dec 09 2016 Martin Sehnoutka <msehnout@redhat.com> - 14:4.5.1-4
+- Fix segfault with --help option. Resolves: #1297812
+
 * Thu Jun 18 2015 Michal Sekletar <msekleta@redhat.com> - 14:4.5.1-3
 - add support for nano second timestamps (#1151406)
 - fix cdp dissector, allow zero-length data frames (#1231246)
