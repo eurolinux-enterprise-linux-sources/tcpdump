@@ -1,0 +1,57 @@
+From 009b632b5c7cf5151699b660a4c885ba57f9f836 Mon Sep 17 00:00:00 2001
+From: Guy Harris <guy@alum.mit.edu>
+Date: Thu, 14 Aug 2014 17:14:32 -0700
+Subject: [PATCH 3/4] Check for TLV length too small.
+
+The TLV length includes the T and the L, so it must be at least 4.
+
+This means we don't need the "avoid infinite loop" check later; that
+check was wrong, as per GitHub issue #401 and #402; this fixes #402,
+which has a different patch for that bug.
+
+(cherry picked from commit 5511e8f79f0ac96671bab23223397881eba8b806)
+
+[msekleta: replaced ND_PRINT by printfs]
+---
+ print-cdp.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/print-cdp.c b/print-cdp.c
+index 152b2f9..5a0eaea 100644
+--- a/print-cdp.c
++++ b/print-cdp.c
+@@ -111,6 +111,21 @@ cdp_print(const u_char *pptr, u_int length, u_int caplen)
+                     goto trunc;
+ 		type = EXTRACT_16BITS(tptr);
+ 		len  = EXTRACT_16BITS(tptr+2); /* object length includes the 4 bytes header length */
++
++		if (len < 4) {
++                    if (vflag)
++                        printf("\n\t%s (0x%02x), length: %u byte%s (too short)",
++                               tok2str(cdp_tlv_values,"unknown field type", type),
++                               type,
++                               len,
++                               PLURAL_SUFFIX(len)); /* plural */
++                    else
++                        printf(", %s TLV length %u too short",
++                               tok2str(cdp_tlv_values,"unknown field type", type),
++                               len);
++                    break;
++                }
++
+                 tptr += 4;
+                 len -= 4;
+ 
+@@ -222,9 +237,6 @@ cdp_print(const u_char *pptr, u_int length, u_int caplen)
+ 			break;
+                     }
+                 }
+-		/* avoid infinite loop */
+-		if (len == 0)
+-			break;
+ 		tptr = tptr+len;
+ 	}
+         if (vflag < 1)
+-- 
+2.4.3
+
