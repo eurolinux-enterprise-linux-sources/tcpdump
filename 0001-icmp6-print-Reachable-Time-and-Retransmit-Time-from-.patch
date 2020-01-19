@@ -1,7 +1,7 @@
-From f19e0376b8e98b38240d28eb9e6f78c465bb1c6e Mon Sep 17 00:00:00 2001
+From 71083535d1aa4cf0f858553dda2efcace31f4967 Mon Sep 17 00:00:00 2001
 From: rpm-build <rpm-build>
 Date: Mon, 20 Oct 2014 13:34:24 +0200
-Subject: [PATCH 1/8] icmp6: print Reachable Time and Retransmit Time from
+Subject: [PATCH 01/13] icmp6: print Reachable Time and Retransmit Time from
  ICMPv6 as milliseconds
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 1/8] icmp6: print Reachable Time and Retransmit Time from
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/print-icmp6.c b/print-icmp6.c
-index 7fe639d..cfaa2df 100644
+index 42fe19f..1980a7a 100644
 --- a/print-icmp6.c
 +++ b/print-icmp6.c
 @@ -1034,7 +1034,7 @@ icmp6_print(netdissect_options *ndo,
@@ -22,5 +22,5 @@ index 7fe639d..cfaa2df 100644
                                    bittok2str(icmp6_opt_ra_flag_values,"none",(p->nd_ra_flags_reserved)),
                                    get_rtpref(p->nd_ra_flags_reserved),
 -- 
-2.9.3
+2.13.5
 

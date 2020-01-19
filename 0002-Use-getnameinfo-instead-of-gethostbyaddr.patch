@@ -1,17 +1,17 @@
-From c48fba64fbbff9c75c79e32ab33aa65742c197d9 Mon Sep 17 00:00:00 2001
+From ac19c334d4147d5fcdd4daa2ed6687340a2cd4b0 Mon Sep 17 00:00:00 2001
 From: rpm-build <rpm-build>
 Date: Mon, 20 Oct 2014 14:12:46 +0200
-Subject: [PATCH 2/8] Use getnameinfo instead of gethostbyaddr
+Subject: [PATCH 02/13] Use getnameinfo instead of gethostbyaddr
 
 ---
  addrtoname.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++--
  1 file changed, 46 insertions(+), 2 deletions(-)
 
 diff --git a/addrtoname.c b/addrtoname.c
-index 6975b71..949acb7 100644
+index df7c2ce..a1e360d 100644
 --- a/addrtoname.c
 +++ b/addrtoname.c
-@@ -220,7 +220,6 @@ static uint32_t f_localnet;
+@@ -230,7 +230,6 @@ static uint32_t f_localnet;
  const char *
  getname(netdissect_options *ndo, const u_char *ap)
  {
@@ -19,7 +19,7 @@ index 6975b71..949acb7 100644
  	uint32_t addr;
  	struct hnamemem *p;
  
-@@ -242,6 +241,28 @@ getname(netdissect_options *ndo, const u_char *ap)
+@@ -252,6 +251,28 @@ getname(netdissect_options *ndo, const u_char *ap)
  	 */
  	if (!ndo->ndo_nflag &&
  	    (addr & f_netmask) == f_localnet) {
@@ -48,7 +48,7 @@ index 6975b71..949acb7 100644
  		hp = gethostbyaddr((char *)&addr, 4, AF_INET);
  		if (hp) {
  			char *dotp;
-@@ -258,6 +279,7 @@ getname(netdissect_options *ndo, const u_char *ap)
+@@ -268,6 +289,7 @@ getname(netdissect_options *ndo, const u_char *ap)
  			}
  			return (p->name);
  		}
@@ -56,7 +56,7 @@ index 6975b71..949acb7 100644
  	}
  	p->name = strdup(intoa(addr));
  	if (p->name == NULL)
-@@ -272,7 +294,6 @@ getname(netdissect_options *ndo, const u_char *ap)
+@@ -282,7 +304,6 @@ getname(netdissect_options *ndo, const u_char *ap)
  const char *
  getname6(netdissect_options *ndo, const u_char *ap)
  {
@@ -64,7 +64,7 @@ index 6975b71..949acb7 100644
  	union {
  		struct in6_addr addr;
  		struct for_hash_addr {
-@@ -297,6 +318,28 @@ getname6(netdissect_options *ndo, const u_char *ap)
+@@ -307,6 +328,28 @@ getname6(netdissect_options *ndo, const u_char *ap)
  	 * Do not print names if -n was given.
  	 */
  	if (!ndo->ndo_nflag) {
@@ -93,7 +93,7 @@ index 6975b71..949acb7 100644
  		hp = gethostbyaddr((char *)&addr, sizeof(addr), AF_INET6);
  		if (hp) {
  			char *dotp;
-@@ -313,6 +356,7 @@ getname6(netdissect_options *ndo, const u_char *ap)
+@@ -323,6 +366,7 @@ getname6(netdissect_options *ndo, const u_char *ap)
  			}
  			return (p->name);
  		}
@@ -102,5 +102,5 @@ index 6975b71..949acb7 100644
  	cp = addrtostr6(ap, ntop_buf, sizeof(ntop_buf));
  	p->name = strdup(cp);
 -- 
-2.9.3
+2.13.5
 

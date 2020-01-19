@@ -1,30 +1,32 @@
 Summary: A network traffic monitoring tool
 Name: tcpdump
 Epoch: 14
-Version: 4.9.0
-Release: 5%{?dist}
+Version: 4.9.2
+Release: 3%{?dist}
 License: BSD with advertising
 URL: http://www.tcpdump.org
 Group: Applications/Internet
 Requires(pre): shadow-utils
-BuildRequires: automake sharutils openssl-devel libcap-ng-devel libpcap-devel git
+Requires: libpcap >= 14:1.5.3-10
+BuildRequires: automake sharutils openssl-devel libcap-ng-devel libpcap-devel git 
 
 Source0: http://www.tcpdump.org/release/%{name}-%{version}.tar.gz
 Source1: ftp://ftp.ee.lbl.gov/tcpslice-1.2a3.tar.gz
 
-Patch0001:      0001-icmp6-print-Reachable-Time-and-Retransmit-Time-from-.patch
-Patch0002:      0002-Use-getnameinfo-instead-of-gethostbyaddr.patch
-# Patch 0003 removed
-Patch0004:      0004-tcpslice-update-tcpslice-patch-to-1.2a3.patch
-Patch0005:      0005-tcpslice-remove-unneeded-include.patch
-Patch0006:      0006-tcpslice-don-t-test-the-pointer-but-pointee-for-NULL.patch
-Patch0007:      0007-Introduce-nn-option.patch
-Patch0008:      0008-Don-t-print-out-we-dropped-root-we-are-always-droppi.patch
-Patch0009:      0009-Change-P-to-Q-and-print-warning.patch
-Patch0010:	0010-Change-n-flag-to-nn-in-TESTonce.patch
-Patch0011: 	0011-Expect-miliseconds-instead-of-seconds-in-icmp-captur.patch
-Patch0012: 	0012-Disable-tests-that-require-newer-version-of-libpcap.patch
-Patch0013:      0013-Make-default-capture-buffer-size-bigger.patch
+Patch0001:	0001-icmp6-print-Reachable-Time-and-Retransmit-Time-from-.patch
+Patch0002:	0002-Use-getnameinfo-instead-of-gethostbyaddr.patch
+Patch0003:	0003-tcpslice-update-tcpslice-patch-to-1.2a3.patch
+Patch0004:	0004-tcpslice-remove-unneeded-include.patch
+Patch0005:	0005-tcpslice-don-t-test-the-pointer-but-pointee-for-NULL.patch
+Patch0006:	0006-Introduce-nn-option.patch
+Patch0007:	0007-Don-t-print-out-we-dropped-root-we-are-always-droppi.patch
+Patch0008:	0008-Change-P-to-Q-and-print-warning.patch
+Patch0009:	0009-Change-n-flag-to-nn-in-TESTonce.patch
+Patch0010:	0010-Expect-miliseconds-instead-of-seconds-in-icmp-captur.patch
+Patch0011:	0011-Disable-tests-that-require-newer-version-of-libpcap.patch
+Patch0012:	0012-Make-default-capture-buffer-size-bigger.patch
+Patch0013:	0013-Add-printing-support-for-vsockmon-devices.patch
+Patch0014:	0014-Disable-test-with-unsupported-link-type.patch
 
 %define tcpslice_dir tcpslice-1.2a3
 
@@ -87,6 +89,18 @@ exit 0
 %{_mandir}/man8/tcpdump.8*
 
 %changelog
+* Wed Nov 15 2017 Michal Ruprich - 14:4.9.2-3
+- Related: rhbz#1464390; build against latest libpcap
+
+* Mon Nov 13 2017 Michal Ruprich <mruprich@redhat.com> - 14:4.9.2-2
+- Related: rhbz#1464390; added dependency on libpcap-14:1.5.3-10 due to vsockmon support
+
+* Thu Sep 14 2017 Martin Sehnoutka <msehnout@redhat.com> - 14:4.9.2-1
+- Resolves: rhbz#1490842; Rebase to 4.9.2 version
+
+* Tue Aug 15 2017 Martin Sehnoutka <msehnout@redhat.com> - 14:4.9.0-6
+- Resolves: rhbz#1464390; Add printing support for vsockmon devices
+
 * Tue May 09 2017 Martin Sehnoutka <msehnout@redhat.com> - 14:4.9.0-5
 - Resolves: #1441597; use bigger capture buffer than in upstream
 
